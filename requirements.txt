@@ -17,3 +17,5 @@ soupsieve==2.0.1
 typing-extensions==3.7.4.2
 urllib3==1.25.10
 yarl==1.5.1
+nest_asyncio
+apscheduler
