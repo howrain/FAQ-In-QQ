@@ -1,3 +1,4 @@
 config.py
 QAIndex.json
 .idea
+/config.json
