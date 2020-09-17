@@ -51,10 +51,10 @@ commands = {  # 命令解析器
 
 @bcc.receiver("GroupMessage")
 async def close_in_group(commandApp: GraiaMiraiApplication, message: GroupMessage, group: Group):
-    if parser(message, "/command "):
+    if parser(message, "~command "):
         if not is_manager(message):
             return
-        command = message.messageChain.get(Plain)[0].text.replace('/command ', '')
+        command = message.messageChain.get(Plain)[0].text.replace('~command ', '')
         send_msg = f"未知的指令{command},目前可执行指令：\n"
         if commands.get(command):
             flag: bool = commands[command](message, group)
