@@ -33,52 +33,9 @@ commands = {  # 命令解析器
     'startQA': start_all,
     'shutdownQA': shutdown_all,
     'manage': open_manager,
-    'closeManage': close_manager,
-    'welcome': open_welcome,
-    'closeWelcome': close_welcome
+    'closeManage': close_manager
 }
 
-'''
-监听新人入群并欢迎
-'''
-
-
-@bcc.receiver("MemberJoinEvent")
-async def MemberJoin(event: MemberJoinEvent):
-    group = event.member.group
-    if group.id not in WelComeGroup:
-        return
-    if group.id in WelcomeScence:
-        talk = WelcomeScence[group.id]
-    else:
-        talk = "欢迎小可爱来到本群"
-    await app.sendGroupMessage(group, MessageChain.create([
-        Plain(talk),
-        At(event.member.id)
-    ]))
-
-
-'''
-修改群迎新词
-'''
-
-
-@bcc.receiver('GroupMessage', headless_decoraters=[
-    Depend(judge_depend_target)
-])
-async def changeWelcome(message: GroupMessage, group: Group):
-    if not parser(message, "修改迎新词 "):
-        return
-    if not message.messageChain.has(Plain):
-        return
-    plain = message.messageChain.get(Plain)
-    txt = plain[0].text.replace("修改迎新词 ", "")
-    if len(txt) > 0:
-        WelcomeScence[group.id] = txt
-        status = "修改成功"
-    else:
-        status = "修改失败，不合法！"
-    await app.sendGroupMessage(group, MessageChain.create([Plain(status)]))
 
 
 '''
@@ -101,6 +58,7 @@ async def close_in_group(commandApp: GraiaMiraiApplication, message: GroupMessag
         send_msg = f"未知的指令{command},目前可执行指令：\n"
         if commands.get(command):
             flag: bool = commands[command](message, group)
+            SaveConfig()
             if flag is None:
                 return
             if flag:
@@ -113,6 +71,7 @@ async def close_in_group(commandApp: GraiaMiraiApplication, message: GroupMessag
         await commandApp.sendGroupMessage(group, message.messageChain.create(
             [Plain(send_msg)]
         ))
+
 
 
 async def indexes(message: GroupMessage, group: Group):
@@ -169,20 +128,22 @@ async def BaiDu(message: GroupMessage, group: Group):
         await app.sendGroupMessage(group=group, message=message.messageChain.create([
             Plain(getACGKnowledge(entry))
         ]))
-    elif parser(message, '。来点好听的'):
-        say_loving(message, group)
+
+'''
+缩写短语查询
+'''
+@bcc.receiver("GroupMessage")
+async def Guess(message: GroupMessage, group: Group):
+    if parser(message, "sx "):
+        entry = message.messageChain.get(Plain)[0].text.strip().replace("sx ", "")
+        await app.sendGroupMessage(group=group, message=message.messageChain.create([
+            Plain(getGuess(entry))
+        ]))
+    pass
 
 
 @bcc.receiver("GroupMessage")
 async def group_message_handler(message: GroupMessage, group: Group):
-    if message.sender.id in FuckUser:
-        await app.sendGroupMessage(group, message.messageChain.create(
-            [
-                Plain("此用户信用度极低，请勿相信其发布的任何小程序或广告链接，谨防上当受骗！"),
-                At(message.sender.id)
-            ]
-        ))
-        return
     if group_is_in_list(message, group, shutdown_all_group):
         return
     if parser(message, "百度 ") \
@@ -241,18 +202,6 @@ async def group_message_handler(message: GroupMessage, group: Group):
         gc.collect()
         return
 
-    if parser(message, ".Fuck") and message.messageChain.has(At) and is_manager(message):
-        id = message.messageChain.get(At)[0].target
-        if id not in FuckUser:
-            FuckUser.append(id)
-            await app.sendGroupMessage(group, message.messageChain.create([
-                Plain("已经将此人拉入危险用户名单")
-            ]))
-        else:
-            await app.sendGroupMessage(group, message.messageChain.create([
-                Plain("此人已被认定为危险用户")
-            ]))
-        return
 
 
 def apscheduler(*args, **kwargs):
@@ -288,6 +237,8 @@ if __name__ == '__main__':
     # loop.run_until_complete(Compatible_old_index())
     nest_asyncio.apply()
     threading.Thread(target=test, args=()).start()
+
+    loop.run_until_complete(ReadConfig())
     loop.run_until_complete(ReadQA())
     loop.run_until_complete(read_love())
     app.launch_blocking()

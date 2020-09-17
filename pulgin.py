@@ -1,4 +1,3 @@
-import json
 import random
 import re
 import graia
@@ -14,12 +13,14 @@ from init_bot import *
 import nest_asyncio
 from command_session import *
 
+
 headers = {
+    'Connection':'close',
     'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) '
                   'Chrome/81.0.4044.138 Safari/537.36 Edg/81.0.416.77 '
 }  # 请求header
 BaiDuWiKi = 'https://baike.baidu.com/item/'
-
+Guess='https://lab.magiconch.com/api/nbnhhsh/guess'
 
 def say_loving(message: GroupMessage, group: Group):
     if group.id in start_baiDu_group:
@@ -85,14 +86,27 @@ def getACGKnowledge(txt: str) -> str:
         return "很抱歉没有找到相关信息或找到多个词条" + '\n' + moeGirlWiki
 
 
+def getGuess(text: str) -> str:
+    txt = quote(text)
+    url = Guess
+    try:
+        post_data={'text':txt}
+        data=requests.post(url,headers=headers,data=post_data).text
+        json_rs=eval(data)
+        trans= json_rs[0]['trans']
+        return "你要找的缩写词可能是 {0} ".format(trans)
+    except:
+        return "好像查不到该缩写词呢(；′⌒`)"
+
 def getBaiduKnowledge(text: str) -> str:
     txt = quote(text)
     url = BaiDuWiKi + txt
     try:
-        data = requests.get(url, headers=headers).text
+        data = requests.get(url, headers=headers,verify=False).text
         bs = BeautifulSoup(data, 'html.parser').find_all(class_='para')[0].get_text() + url
         return bs
-    except:
+    except Exception:
+
         return "很抱歉没有找到相关结果"
 
 

@@ -15,13 +15,14 @@ BlackUser = []
 # 黑名单
 Manager = []
 # 超级管理员
-FuckUser = []
-# 诈骗黑名单
+
 start_baiDu_group = []
 mast_manager_group = []
 quick_find_question_list = {}
 shutdown_all_group = []
 loop = asyncio.get_event_loop()  # 获取bot运行的协程
+
+json_config={}
 
 bcc = Broadcast(loop=loop)
 
@@ -34,6 +35,36 @@ app = GraiaMiraiApplication(
         websocket=True  # Graia 已经可以根据所配置的消息接收的方式来保证消息接收部分的正常运作.
     )
 )
+
+
+async def ReadConfig():
+    try:
+        with open('config.json','r') as f:
+            json_config = json.load(f)
+            if json_config.has_key('baiDu_group'):
+                for i in json_config['baiDu_group']:
+                    start_baiDu_group.append(i)
+            if json_config.has_key('shutdown_all_group'):
+                for i in json_config['shutdown_all_group']:
+                    shutdown_all_group.append(i)
+            if json_config.has_key('mast_manager_group'):
+                for i in json_config['mast_manager_group']:
+                    mast_manager_group.append(i)
+            print('初始化配置完成')
+
+        pass
+    except:
+        print('读取配置失败')
+        pass
+
+
+def SaveConfig():
+    with open('config.json', 'w') as f:
+        json_config['baiDu_group']=start_baiDu_group
+        json_config['shutdown_all_group']=shutdown_all_group
+        json_config['mast_manager_group']=mast_manager_group
+        json.dump(json_config,f)
+    pass
 
 
 async def ReadQA():
