@@ -20,7 +20,7 @@ import sched
 '''
 各文件说明：
     init_bot.py 初始化bot对象和一些需要用到的list或者dict
-    bot.py 运行的main文件，包括消息指令入口
+    faq_bot.py 运行的main文件，包括消息指令入口
     MsgObj.py 独立封装的message消息类，便于对消息数据进行保存和调用
     pulgin.py bot所需要到的一些函数的封装
     config.py bot运行所需要的配置，端口号，bot的QQ号等，配置参见Graia文档
