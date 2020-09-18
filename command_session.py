@@ -1,5 +1,7 @@
 from graia.application import Group, GroupMessage
 from init_bot import *
+from pulgin import *
+
 
 
 def is_manager(message: GroupMessage) -> bool:

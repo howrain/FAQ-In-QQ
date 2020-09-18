@@ -40,20 +40,21 @@ app = GraiaMiraiApplication(
 async def ReadConfig():
     try:
         with open('config.json','r') as f:
-            json_config = json.load(f)
-            if json_config.has_key('baiDu_group'):
+            global json_config
+            json_config = json.load(f).copy()
+            if 'baiDu_group' in json_config.keys():
                 for i in json_config['baiDu_group']:
                     start_baiDu_group.append(i)
-            if json_config.has_key('shutdown_all_group'):
+            if 'shutdown_all_group' in json_config.keys():
                 for i in json_config['shutdown_all_group']:
                     shutdown_all_group.append(i)
-            if json_config.has_key('mast_manager_group'):
+            if 'mast_manager_group' in json_config.keys():
                 for i in json_config['mast_manager_group']:
                     mast_manager_group.append(i)
             print('初始化配置完成')
 
         pass
-    except:
+    except Exception:
         print('读取配置失败')
         pass
 

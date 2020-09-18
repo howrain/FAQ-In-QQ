@@ -36,8 +36,6 @@ commands = {  # 命令解析器
     'closeManage': close_manager
 }
 
-
-
 '''
 问答模块，集合了
     添加问题
@@ -47,6 +45,34 @@ commands = {  # 命令解析器
     问答功能
 （注：这部分代码十分恶心，请谨慎阅读，之后会重构）
 '''
+
+
+@bcc.receiver("GroupMessage")
+async def help_in_group(commandApp: GraiaMiraiApplication, message: GroupMessage, group: Group):
+    if parser(message, "~help"):
+        await app.sendGroupMessage(group=group, message=message.messageChain.create([
+            Plain(
+'''--------FAQ相关指令--------
+~command相关：
+startBaidu 二级命令 开启本群百科检索
+shutdownBaidu 二级命令 关闭本群百科检索
+startQA 二级命令 开启本群检索相关功能
+shutdownQA 二级命令 关闭本群检索相关功能
+----------------
+检索功能相关：
+百度 检索百度百科 例(百度 awsl)
+萌娘 检索萌娘百科 例(萌娘 awsl)
+sx 缩写词检索 例(sx awsl)
+----------------
+问答功能相关：
+列表 查看已添加的问题
+添加问题 添加一个问题
+修改问题 修改一个问题
+删除问题 删除一个问题''')
+        ]))
+        pass
+
+    pass
 
 
 @bcc.receiver("GroupMessage")
@@ -73,9 +99,8 @@ async def close_in_group(commandApp: GraiaMiraiApplication, message: GroupMessag
         ))
 
 
-
 async def indexes(message: GroupMessage, group: Group):
-    id : str = message.messageChain.get(Plain)[0].text.strip().replace('#', '')
+    id: str = message.messageChain.get(Plain)[0].text.strip().replace('#', '')
     if id.isdigit():
         temp_list: list = quick_find_question_list[group.id]
         question: str = temp_list[int(id)]
@@ -129,9 +154,12 @@ async def BaiDu(message: GroupMessage, group: Group):
             Plain(getACGKnowledge(entry))
         ]))
 
+
 '''
 缩写短语查询
 '''
+
+
 @bcc.receiver("GroupMessage")
 async def Guess(message: GroupMessage, group: Group):
     if parser(message, "sx "):
@@ -153,7 +181,7 @@ async def group_message_handler(message: GroupMessage, group: Group):
     question = message.messageChain.get(Plain)[0].text if message.messageChain.has(Plain) else None
     has_session = temp_talk.get(msg.user_id)
     if has_session is not None:
-        await session_manager(message,group)
+        await session_manager(message, group)
         return
     if await FQA(message, group):
         return
@@ -178,8 +206,8 @@ async def group_message_handler(message: GroupMessage, group: Group):
     if parser(message, "修改问题 "):
         # 创建修改问题的新会话
         question = question.replace("修改问题", "").strip()
-        question = question if not re.search("#",question) \
-            else quick_find_question_list[group.id][int(question.replace('#',''))]
+        question = question if not re.search("#", question) \
+            else quick_find_question_list[group.id][int(question.replace('#', ''))]
         if has_session is None:
             add_temp_talk(msg.user_id, 'Change', True, question)
             sendMsg = await change(group=group, GM=message)
@@ -203,7 +231,6 @@ async def group_message_handler(message: GroupMessage, group: Group):
         return
 
 
-
 def apscheduler(*args, **kwargs):
     def decorator(func):
         @functools.wraps(func)
@@ -219,24 +246,24 @@ def apscheduler(*args, **kwargs):
     return decorator
 
 
-@apscheduler('interval', hour=6)
-def test():
+@apscheduler('interval', hour=1)
+def restart():
     print("程序重新开始")
     python = sys.executable
     os.execl(python, python, *sys.argv)
 
 
 @bcc.receiver("FriendMessage")
-async def restart(message: FriendMessage, friend: Friend):
+async def restart_manager(message: FriendMessage, friend: Friend):
     if friend.id in Manager and message.messageChain.asDisplay().startswith("重启"):
-        test()
+        restart()
 
 
 if __name__ == '__main__':
     # 初始化GroupQA
     # loop.run_until_complete(Compatible_old_index())
     nest_asyncio.apply()
-    threading.Thread(target=test, args=()).start()
+    threading.Thread(target=restart, args=()).start()
 
     loop.run_until_complete(ReadConfig())
     loop.run_until_complete(ReadQA())
