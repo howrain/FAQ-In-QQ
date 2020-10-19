@@ -271,7 +271,7 @@ async def AddQA(groupMsg: GroupMessage, group: Group) -> MessageChain:
                     Plain(reply)
                 ]).plusWith(t_QA[Question].get_msg_list())
                 temp_talk.pop(session.user_id)
-            elif Question.isspace():
+            elif Question.isspace() or len(Question) == 0:
                 sendMsg = session.msg_chain.create([
                     Plain("问题为空，请重新录入")
                 ])
